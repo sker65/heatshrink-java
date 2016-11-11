@@ -55,5 +55,16 @@ public class HeatShrinkDecoderTest {
 		Result result = uut.poll(outBuffer);
 		assertEquals(EMPTY, result.code);
 	}
+	
+	@Test(expected=IllegalArgumentException.class)
+	public void testPollNull() throws Exception {
+		uut.poll(null);
+	}
+
+	@Test(expected=IllegalArgumentException.class)
+	public void testSinkNull() throws Exception {
+		uut.sink(null,0,0);
+	}
+
 
 }

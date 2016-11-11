@@ -4,10 +4,6 @@ import static com.rinke.solutions.io.Result.Code.*;
 import static com.rinke.solutions.io.Result.*;
 import static com.rinke.solutions.io.HeatShrinkEncoder.State.*;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Arrays;
 
 import org.slf4j.Logger;
@@ -88,16 +84,16 @@ public class HeatShrinkEncoder {
 	 */
 	public Result sink(byte[] inputBuffer, int offset, int size /* , size_t *input_size */) {
 		if (inputBuffer == null) {
-			return res(ERROR_NULL);
+			throw new IllegalArgumentException("inputBuffer must not be null");
 		}
 		/* Sinking more content after saying the content is done, tsk tsk */
 		if (isFinishing()) {
-			return res(ERROR_MISUSE);
+			throw new IllegalStateException("encoder is already in finished state");
 		}
 
 		/* Sinking more content before processing is done */
 		if (state != HSES_NOT_FULL) {
-			return res(ERROR_MISUSE);
+			throw new IllegalStateException("Sinking more content before processing is done");
 		}
 
 		int writeOffset = getInputOffset() + inputSize;
@@ -137,21 +133,21 @@ public class HeatShrinkEncoder {
 	 * Poll for output from the encoder, copying at most OUT_BUF_SIZE bytes into
 	 * OUT_BUF (setting *OUTPUT_SIZE to the actual amount copied).
 	 */
-	public Result poll(byte[] out_buf /* size_t *output_size */) {
-		if (out_buf == null) {
-			return res(ERROR_NULL);
+	public Result poll(byte[] outBuf /* size_t *output_size */) {
+		if (outBuf == null) {
+			throw new IllegalArgumentException("outBuf must not be null");
 		}
 		
-		int outBufSize = out_buf.length;
+		int outBufSize = outBuf.length;
 
 		if (outBufSize == 0) {
 			log.debug("-- MISUSE: output buffer size is 0");
-			return res(ERROR_MISUSE);
+			throw new IllegalArgumentException("outBuf length must not be null");
 		}
 
 		OutputInfo oi = new OutputInfo();
-		oi.buf = out_buf;
-		oi.bufSize = out_buf.length;
+		oi.buf = outBuf;
+		oi.bufSize = outBuf.length;
 		oi.outputSize = 0;
 
 		while (true) {
@@ -559,54 +555,4 @@ public class HeatShrinkEncoder {
 		return state == HSES_DONE ? res(DONE) : res(MORE);
 	}
 	
-	public static void main( String[] args ) throws Exception {
-		InputStream is = new FileInputStream(args[0]);
-		OutputStream os = new FileOutputStream(args[1]);
-		byte[] inbuffer = new byte[1024];
-		byte[] outbuffer = new byte[4096];
-		//System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
-		HeatShrinkEncoder encoder = new HeatShrinkEncoder(10, 4);
-		int inputOffset = 0;
-		int remainingInInput = 0;
-		Result res = res(OK);
-		long start = System.currentTimeMillis();
-		while( true ) {
-			do { // read and fill input buffer until full
-				if( remainingInInput == 0 ) {
-					// read some input bytes
-					remainingInInput = is.read(inbuffer);
-					inputOffset = 0;
-				}
-				if( remainingInInput < 0 ) {
-					res = encoder.finish();
-					break;
-				}
-				res = encoder.sink(inbuffer, inputOffset, remainingInInput);
-				if( res.isError() ) error(res);
-				remainingInInput -= res.count;
-				inputOffset += res.count;
-			} while( res.code != FULL );
-			
-			if( res.code == DONE ) break;
-			// now input buffer is full, poll for output
-			do {
-				res = encoder.poll(outbuffer);
-				if( res.isError()) error(res);
-				if( res.count > 0 ) {
-					os.write(outbuffer, 0, res.count);
-				}
-			} while( res.code == MORE );
-			//if( res.code == DONE ) break;
-		}
-		long duration = System.currentTimeMillis() - start;
-		System.out.println("duration: "+ duration / 1000.0);
-		os.close();
-		is.close();	
-	}
-
-	private static void error(Result res) {
-		System.err.println("finished with error "+res.code.name());
-		System.exit(1);
-	}
-
 }

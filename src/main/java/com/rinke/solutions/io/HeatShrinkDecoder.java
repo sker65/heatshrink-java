@@ -4,11 +4,6 @@ import static com.rinke.solutions.io.Result.Code.*;
 import static com.rinke.solutions.io.Result.*;
 import static com.rinke.solutions.io.HeatShrinkDecoder.State.*;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,7 +98,7 @@ public class HeatShrinkDecoder {
     
     public Result sink(byte inBuffer[], int offset, int size) {
         if ( inBuffer == null) {
-            return res(ERROR_NULL);
+        	throw new IllegalArgumentException("inBuffer must not be null");
         }
 
         int rem = inputBufferSize - inputSize;
@@ -121,15 +116,20 @@ public class HeatShrinkDecoder {
         return res(size,OK);
     }
 
-    public Result poll( byte[] out_buf /*, int offset , size_t *output_size*/) {
-        if (out_buf == null) {
-            return res(ERROR_NULL);
+    /**
+     * poll decoded bytes into outBuffer.
+     * @param outBuffer must not be null
+     * @return result: count byte were polled.
+     */
+    public Result poll( byte[] outBuffer /*, int offset , size_t *output_size*/) {
+        if (outBuffer == null) {
+            throw new IllegalArgumentException("outbuffer must not be null");
         }
         
-        int outBufSize = out_buf.length;
+        int outBufSize = outBuffer.length;
         
         OutputInfo oi = new OutputInfo();
-        oi.buf = out_buf;
+        oi.buf = outBuffer;
         oi.bufSize = outBufSize;
         oi.outputSize = 0;
 
@@ -335,60 +335,5 @@ public class HeatShrinkDecoder {
 	    }
 	}
 	
-	/**
-	 * example main program for compression
-	 * @param args in and outfile
-	 * @throws Exception
-	 */
-	
-	public static void main( String[] args ) throws Exception {
-		InputStream is = new FileInputStream(args[0]);
-		OutputStream os = new FileOutputStream(args[1]);
-		byte[] inbuffer = new byte[1024];
-		byte[] outbuffer = new byte[4096];
-		//System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
-		HeatShrinkDecoder decoder = new HeatShrinkDecoder(10, 5, inbuffer.length);
-		int inputOffset = 0;
-		int remainingInInput = 0;
-		Result res = res(OK);
-		long start = System.currentTimeMillis();
-		while( true ) {
-			do { // read and fill input buffer until full
-				if( remainingInInput == 0 ) {
-					// read some input bytes
-					remainingInInput = is.read(inbuffer);
-					inputOffset = 0;
-				}
-				if( remainingInInput < 0 ) {
-					res = decoder.finish();
-					break;
-				}
-				res = decoder.sink(inbuffer, inputOffset, remainingInInput);
-				if( res.isError() ) error(res);
-				remainingInInput -= res.count;
-				inputOffset += res.count;
-			} while( res.code != FULL );
-			
-			if( res.code == DONE ) break;
-			// now input buffer is full, poll for output
-			do {
-				res = decoder.poll(outbuffer);
-				if( res.isError()) error(res);
-				if( res.count > 0 ) {
-					os.write(outbuffer, 0, res.count);
-				}
-			} while( res.code == MORE );
-			//if( res.code == DONE ) break;
-		}
-		long duration = System.currentTimeMillis() - start;
-		System.out.println("duration: "+ duration / 1000.0);
-		os.close();
-		is.close();	
-	}
-
-	private static void error(Result res) {
-		System.err.println("finished with error "+res.code.name());
-		System.exit(1);
-	}
 
 }
