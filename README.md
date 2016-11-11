@@ -1,6 +1,8 @@
 # heatshrink-java
 Java implementation of heatshrink compression algorithm
 
+<img src="https://travis-ci.org/sker65/heatshrink-java.svg?branch=master" />
+
 ## Why
 This library is a java port from the great heatshrink library by Scott Vokes
 https://spin.atomicobject.com/2013/03/14/heatshrink-embedded-data-compression/
