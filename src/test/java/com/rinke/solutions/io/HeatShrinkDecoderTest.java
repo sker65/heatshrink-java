@@ -10,6 +10,8 @@ import static org.junit.Assert.*;
 
 public class HeatShrinkDecoderTest {
 	
+	byte[] compressed = { 0x0, 0x1f, 0x0, 0x1f, 0x0, 0x1f, 0x0, 0x1f, 0x0, 0x1f, 0x0, 0x1f, 0x0, 0x1f, 0x0, 0x1f, 0x0, 0x1f, 0x0, 0x1f, 0x0, 0x1f, 0x0, 0x1f,
+			0x0, 0x1f, 0x0, 0x1f, 0x0, 0x1f, 0x0, 0x1f };
 
 	private HeatShrinkDecoder uut;
 
@@ -17,6 +19,18 @@ public class HeatShrinkDecoderTest {
 	public void setUp() throws Exception {
 		uut = new HeatShrinkDecoder(10, 5, 1024);
 	}
+	
+	@Test
+	public void testDecode() throws Exception {
+		Result res = uut.sink(compressed, 0, compressed.length);
+		uut.finish();
+		byte[] buf = new byte[4096];
+		Result p = uut.poll(buf);
+		assertEquals(512, p.count);
+		assertEquals(EMPTY, p.code);
+	}
+
+
 
 	@Test
 	public void testFinish() throws Exception {
