@@ -1,10 +1,13 @@
 package com.rinke.solutions.io;
 
+import static com.rinke.solutions.io.Result.Code.ERROR_NULL;
+
 /**
  * common result class for encoder / decoder.
  * @author stefan rinke
  */
 public class Result {
+	
 	public int count;
 
 	enum Code {
@@ -34,6 +37,20 @@ public class Result {
 	public boolean isError() {
 		return code.error;
 	}
+	
+	public static Result res() {
+		return new Result(0, ERROR_NULL);
+	}
+
+	public static Result res(int count, Code res) {
+		return new Result(count, res);
+	}
+
+	public static Result res(Code res) {
+		return new Result(0, res);
+	}
+
+
 
 	@Override
 	public String toString() {

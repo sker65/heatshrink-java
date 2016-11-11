@@ -1,8 +1,8 @@
 package com.rinke.solutions.io;
 
-
 import static com.rinke.solutions.io.Result.Code.*;
 import static com.rinke.solutions.io.Result.*;
+import static com.rinke.solutions.io.HeatShrinkDecoder.State.*;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -20,23 +20,6 @@ import org.slf4j.LoggerFactory;
 public class HeatShrinkEncoder {
 	
 	private static final Logger log = LoggerFactory.getLogger(HeatShrinkEncoder.class);
-
-	/**
-	 * couple of convenience factory methods for results
-	 * @return
-	 */
-
-	static Result res() {
-		return new Result(0, ERROR_NULL);
-	}
-
-	static Result res(int count, Code res) {
-		return new Result(count, res);
-	}
-
-	static Result res(Code res) {
-		return new Result(0, res);
-	}
 
 	enum State {
 		HSES_NOT_FULL,			/* input buffer not full enough */
@@ -59,20 +42,20 @@ public class HeatShrinkEncoder {
 	private static final byte HEATSHRINK_LITERAL_MARKER = 0x01;
 	private static final byte HEATSHRINK_BACKREF_MARKER = 0x00;
 
-	int inputSize; /* bytes in input buffer */
-	Match match = new Match(0, 0);
-	int outgoingBits; /* enqueued outgoing bits */
-	int outgoingBitsCount;
-	int flags;
-	State state; /* current state machine node */
-	int currentByte; /* current byte of output */
-	int bitIndex; /* current bit index */
+	private int inputSize; /* bytes in input buffer */
+	private Match match = new Match(0, 0);
+	private int outgoingBits; /* enqueued outgoing bits */
+	private int outgoingBitsCount;
+	private int flags;
+	private State state; /* current state machine node */
+	private int currentByte; /* current byte of output */
+	private int bitIndex; /* current bit index */
 
-	int windowSize;
-	int lookAhead;
+	private int windowSize;
+	private int lookAhead;
 
 	/* input buffer and / sliding window for expansion */
-	byte buffer[];// = new byte[2 << HEATSHRINK_STATIC_WINDOW_BITS];
+	private byte buffer[];// = new byte[2 << HEATSHRINK_STATIC_WINDOW_BITS];
 
 	private boolean useIndex = true;
 

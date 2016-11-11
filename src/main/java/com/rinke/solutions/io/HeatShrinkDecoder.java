@@ -1,6 +1,7 @@
 package com.rinke.solutions.io;
 
-import static com.rinke.solutions.io.HeatShrinkDecoder.Result.Code.*;
+import static com.rinke.solutions.io.Result.Code.*;
+import static com.rinke.solutions.io.Result.*;
 import static com.rinke.solutions.io.HeatShrinkDecoder.State.*;
 
 import java.io.FileInputStream;
@@ -11,7 +12,7 @@ import java.io.OutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.rinke.solutions.io.HeatShrinkDecoder.Result.Code;
+import com.rinke.solutions.io.Result.Code;
 
 /**
  * java implementation of the heatshrink compression algorithm by https://github.com/atomicobject/heatshrink
@@ -32,56 +33,22 @@ public class HeatShrinkDecoder {
 	    HSDS_YIELD_BACKREF,         /* ready to yield back-reference */
 	};
 	
-	public static class Result {
-		
-		public int count;
-		public Code code;
-
-		public Result(int i, Code code) {
-			this.code = code;
-			this.count = i;
-		}
-		
-		public boolean isError() { return code.error; }
-		
-		@Override
-		public String toString() {
-			return String.format("Result [count=%d, code=%s]", count, code);
-		}
-
-		enum  Code {
-		    OK(false),               /* data sunk, ready to poll */
-		    FULL(false),             /* out of space in internal buffer */
-		    ERROR_NULL(true),    /* NULL argument */
-		    EMPTY(false),            /* input exhausted */
-		    MORE(false),             /* more data remaining, call again w/ fresh output buffer */
-		    ERROR_UNKNOWN(true),
-		    DONE(false);           /* output is done */
-			public boolean error;
-
-			private Code(boolean error) {
-				this.error = error;
-			}
-		};
-	}
-	
-    int inputSize;        /* bytes in input buffer */
-    int inputIndex;       /* offset to next unprocessed input byte */
-    int outputCount;      /* how many bytes to output */
-    int outputIndex;      /* index for bytes to output */
-    int headIndex;        /* head of window buffer */
-    State state;              /* current state machine node */
-    int currentByte;       /* current byte of input */
-    int bitIndex;          /* current bit index */
-
+	private int inputSize;        /* bytes in input buffer */
+	private int inputIndex;       /* offset to next unprocessed input byte */
+	private int outputCount;      /* how many bytes to output */
+	private int outputIndex;      /* index for bytes to output */
+	private int headIndex;        /* head of window buffer */
+	private State state;              /* current state machine node */
+	private int currentByte;       /* current byte of input */
+	private int bitIndex;          /* current bit index */
 
     /* Fields that are only used if dynamically allocated. */
-    int windowSize;         /* window buffer bits */
-	int lookaheadSize;      /* lookahead bits */
-	int inputBufferSize; /* input buffer size */
+	private int windowSize;         /* window buffer bits */
+    private int lookaheadSize;      /* lookahead bits */
+    private int inputBufferSize; /* input buffer size */
 
     /* Input buffer, then expansion window buffer */
-    byte buffer[];
+    private byte buffer[];
 
 	public HeatShrinkDecoder(int windowSize, int lookaheadSize, int input_buffer_size) {
 		super();
@@ -136,18 +103,6 @@ public class HeatShrinkDecoder {
         headIndex = 0;
     }
     
-	static Result res() {
-		return new Result(0, ERROR_NULL);
-	}
-
-	static Result res(int count, Code res) {
-		return new Result(count, res);
-	}
-
-	static Result res(Code res) {
-		return new Result(0, res);
-	}
-
     public Result sink(byte inBuffer[], int offset, int size) {
         if ( inBuffer == null) {
             return res(ERROR_NULL);
