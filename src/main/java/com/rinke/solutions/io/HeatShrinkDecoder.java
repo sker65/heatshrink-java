@@ -83,16 +83,6 @@ public class HeatShrinkDecoder {
     /* Input buffer, then expansion window buffer */
     byte buffer[];
 
-	public static class OutputInfo {
-		public byte[] buf; 		/* output buffer */
-		public int bufSize; 	/* buffer size, redundant in java */
-		public int outputSize; 	/* bytes pushed to buffer, so far */
-		@Override
-		public String toString() {
-			return String.format("OutputInfo [buf_size=%s, output_size=%s]", bufSize, outputSize);
-		}
-	};
-
 	public HeatShrinkDecoder(int windowSize, int lookaheadSize, int input_buffer_size) {
 		super();
 		this.windowSize = windowSize;
