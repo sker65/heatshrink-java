@@ -1,7 +1,8 @@
 package com.rinke.solutions.io;
 
 
-import static com.rinke.solutions.io.HeatShrinkEncoder.Result.Code.*;
+import static com.rinke.solutions.io.Result.Code.*;
+import static com.rinke.solutions.io.Result.*;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -12,8 +13,6 @@ import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.rinke.solutions.io.HeatShrinkEncoder.Result.Code;
-
 /**
  * java implementation of the heatshrink compression algorithm by https://github.com/atomicobject/heatshrink
  * @author Stefan Rinke
@@ -22,41 +21,6 @@ public class HeatShrinkEncoder {
 	
 	private static final Logger log = LoggerFactory.getLogger(HeatShrinkEncoder.class);
 
-	public static class Result {
-		public int count;
-
-		enum Code {
-			OK(false), /* data sunk into input buffer */
-			FULL(false), /* data sunk into input buffer */
-			EMPTY(false), /* input exhausted */
-			MORE(false), /* poll again for more output */
-			DONE(false), /* encoding is complete */
-			ERROR_NULL(true), /* NULL argument */
-			ERROR_MISUSE(true);
-			public boolean error;
-			private Code(boolean error) {
-				this.error = error;
-			}
-		}
-
-		Code code;
-
-		public Result(int count, Code res) {
-			super();
-			this.count = count;
-			this.code = res;
-		}
-		
-		public boolean isError() {
-			return code.error;
-		}
-
-		@Override
-		public String toString() {
-			return String.format("Result [count=%d, code=%s]", count, code);
-		}
-	}
-	
 	/**
 	 * couple of convenience factory methods for results
 	 * @return
