@@ -2,7 +2,7 @@ package com.rinke.solutions.io;
 
 import static com.rinke.solutions.io.Result.Code.*;
 import static com.rinke.solutions.io.Result.*;
-import static com.rinke.solutions.io.HeatShrinkDecoder.State.*;
+import static com.rinke.solutions.io.HeatShrinkEncoder.State.*;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -71,7 +71,7 @@ public class HeatShrinkEncoder {
 	public void reset() {
 		Arrays.fill(buffer, (byte) 0);
 		inputSize = 0;
-		state = State.HSES_NOT_FULL;
+		state = HSES_NOT_FULL;
 		flags = 0;
 		bitIndex = 0x80;
 		currentByte = 0x00;
@@ -96,7 +96,7 @@ public class HeatShrinkEncoder {
 		}
 
 		/* Sinking more content before processing is done */
-		if (state != State.HSES_NOT_FULL) {
+		if (state != HSES_NOT_FULL) {
 			return res(ERROR_MISUSE);
 		}
 
@@ -114,7 +114,7 @@ public class HeatShrinkEncoder {
 		log.debug("-- sunk {} bytes (of {}) into encoder at {}, input buffer now has {}", copySize, size, writeOffset, inputSize);
 		if (copySize == remain) {
 			log.debug("-- internal buffer is now full");
-			state = State.HSES_FILLED;
+			state = HSES_FILLED;
 			return res(copySize, FULL);
 		}
 
@@ -163,7 +163,7 @@ public class HeatShrinkEncoder {
 				return res(oi.outputSize, EMPTY);
 			case HSES_FILLED:
 				doIndexing();
-				state = State.HSES_SEARCH;
+				state = HSES_SEARCH;
 				break;
 			case HSES_SEARCH:
 				state = stepSearch();
@@ -204,14 +204,14 @@ public class HeatShrinkEncoder {
 	private State flushBitBuffer(OutputInfo oi) {
 		if (bitIndex == 0x80) {
 			log.debug("-- done!");
-			return State.HSES_DONE;
+			return HSES_DONE;
 		} else if (canTakeByte(oi)) {
 			log.debug("-- flushing remaining byte (bit_index == {})", bitIndex);
 			oi.buf[oi.outputSize++] = (byte) currentByte;
 			log.debug("-- done!");
-			return State.HSES_DONE;
+			return HSES_DONE;
 		} else {
-			return State.HSES_FLUSH_BITS;
+			return HSES_FLUSH_BITS;
 		}
 	}
 
@@ -237,21 +237,21 @@ public class HeatShrinkEncoder {
 		match.scanIndex = 0;
 		inputSize -= offset;
 		
-		return State.HSES_NOT_FULL;
+		return HSES_NOT_FULL;
 	}
 
 	private State yieldBackRefLength(OutputInfo oi) {
 		if (canTakeByte(oi)) {
 			log.debug("-- yielding backref length {}", match.length);
 			if (push_outgoing_bits(oi) > 0) {
-				return State.HSES_YIELD_BR_LENGTH;
+				return HSES_YIELD_BR_LENGTH;
 			} else {
 				match.scanIndex += match.length;
 				match.length = 0;
-				return State.HSES_SEARCH;
+				return HSES_SEARCH;
 			}
 		} else {
-			return State.HSES_YIELD_BR_LENGTH;
+			return HSES_YIELD_BR_LENGTH;
 		}
 	}
 
@@ -278,23 +278,23 @@ public class HeatShrinkEncoder {
 		if (canTakeByte(oi)) {
 			log.debug("-- yielding backref index {}", match.pos);
 			if (push_outgoing_bits(oi) > 0) {
-				return State.HSES_YIELD_BR_INDEX; /* continue */
+				return HSES_YIELD_BR_INDEX; /* continue */
 			} else {
 				outgoingBits = match.length - 1;
 				outgoingBitsCount = lookAhead;
-				return State.HSES_YIELD_BR_LENGTH; /* done */
+				return HSES_YIELD_BR_LENGTH; /* done */
 			}
 		} else {
-			return State.HSES_YIELD_BR_INDEX; /* continue */
+			return HSES_YIELD_BR_INDEX; /* continue */
 		}
 	}
 
 	private State yieldLiteral(OutputInfo oi) {
 		if (canTakeByte(oi)) {
 			push_literal_byte(oi);
-			return State.HSES_SEARCH;
+			return HSES_SEARCH;
 		} else {
-			return State.HSES_YIELD_LITERAL;
+			return HSES_YIELD_LITERAL;
 		}
 	}
 
@@ -315,15 +315,15 @@ public class HeatShrinkEncoder {
 		if (canTakeByte(oi)) {
 			if (match.length == 0) {
 				addTagBit(oi, HEATSHRINK_LITERAL_MARKER);
-				return State.HSES_YIELD_LITERAL;
+				return HSES_YIELD_LITERAL;
 			} else {
 				addTagBit(oi, HEATSHRINK_BACKREF_MARKER);
 				outgoingBits = match.pos - 1;
 				outgoingBitsCount = windowSize;
-				return State.HSES_YIELD_BR_INDEX;
+				return HSES_YIELD_BR_INDEX;
 			}
 		} else {
-			return State.HSES_YIELD_TAG_BIT; /* output is full, continue */
+			return HSES_YIELD_TAG_BIT; /* output is full, continue */
 		}
 	}
 
@@ -380,7 +380,7 @@ public class HeatShrinkEncoder {
 			 * await more input.
 			 */
 			log.debug("-- end of search @ {}", msi);
-			return fin ? State.HSES_FLUSH_BITS : State.HSES_SAVE_BACKLOG;
+			return fin ? HSES_FLUSH_BITS : HSES_SAVE_BACKLOG;
 		}
 
 		int input_offset = getInputOffset();
@@ -398,7 +398,7 @@ public class HeatShrinkEncoder {
 			log.debug("ss Match not found");
 			match.scanIndex++;
 			match.length = 0;
-			return State.HSES_YIELD_TAG_BIT;
+			return HSES_YIELD_TAG_BIT;
 		} else {
 			log.debug("ss Found match of {} bytes at {}", match.length, match.pos);
 			// match_pos = match_pos;
@@ -406,7 +406,7 @@ public class HeatShrinkEncoder {
 			// ASSERT(match_pos <= 1 << HEATSHRINK_ENCODER_WINDOW_BITS(hse)
 			// /*window_length*/);
 
-			return State.HSES_YIELD_TAG_BIT;
+			return HSES_YIELD_TAG_BIT;
 		}
 	}
 
@@ -553,10 +553,10 @@ public class HeatShrinkEncoder {
 	public Result finish() {
 		log.debug("-- setting is_finishing flag");
 		flags |= FLAG_IS_FINISHING;
-		if (state == State.HSES_NOT_FULL) {
-			state = State.HSES_FILLED;
+		if (state == HSES_NOT_FULL) {
+			state = HSES_FILLED;
 		}
-		return state == State.HSES_DONE ? res(DONE) : res(MORE);
+		return state == HSES_DONE ? res(DONE) : res(MORE);
 	}
 	
 	public static void main( String[] args ) throws Exception {
