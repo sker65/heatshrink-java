@@ -12,8 +12,6 @@ import java.io.OutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.rinke.solutions.io.Result.Code;
-
 /**
  * java implementation of the heatshrink compression algorithm by https://github.com/atomicobject/heatshrink
  * @author Stefan Rinke
