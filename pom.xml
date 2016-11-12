@@ -60,6 +60,7 @@
 				<artifactId>coveralls-maven-plugin</artifactId>
 				<version>4.3.0</version>
 				<configuration>
+				    <sourceEncoding>UTF-8</sourceEncoding>
 					<repoToken>dpPUBmme3vnBVsLMSEMx089tkw2D8rKTY</repoToken>
 				</configuration>
 			</plugin>
