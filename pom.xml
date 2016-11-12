@@ -6,12 +6,12 @@
 	<version>0.0.1</version>
 	<name>heatshrink compression java lib</name>
 	<description>java implementation of the heatshrink compression library</description>
-    <developers>
-        <developer>
-            <name>Stefan Rinke</name>
-            <email>info@rinke-solutions.com</email>
-        </developer>
-    </developers>
+	<developers>
+		<developer>
+			<name>Stefan Rinke</name>
+			<email>info@rinke-solutions.com</email>
+		</developer>
+	</developers>
 	<dependencies>
 
 		<dependency>
@@ -21,10 +21,10 @@
 		</dependency>
 
 		<dependency>
-		    <groupId>org.slf4j</groupId>
-		    <artifactId>slf4j-simple</artifactId>
-		    <version>1.7.21</version>
-		    <scope>test</scope>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+			<version>1.7.21</version>
+			<scope>test</scope>
 		</dependency>
 
 		<dependency>
@@ -39,7 +39,30 @@
 			<version>4.12</version>
 			<scope>test</scope>
 		</dependency>
-
-
 	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.7.6.201602180812</version>
+				<executions>
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.eluder.coveralls</groupId>
+				<artifactId>coveralls-maven-plugin</artifactId>
+				<version>4.3.0</version>
+				<configuration>
+					<repoToken>dpPUBmme3vnBVsLMSEMx089tkw2D8rKTY</repoToken>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>
