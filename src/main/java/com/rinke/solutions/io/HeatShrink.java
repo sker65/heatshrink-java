@@ -34,90 +34,17 @@ public class HeatShrink {
 	public static void encode( String[] args ) throws Exception {
 		InputStream is = new FileInputStream(args[0]);
 		OutputStream os = new FileOutputStream(args[1]);
-		byte[] inbuffer = new byte[1024];
-		byte[] outbuffer = new byte[4096];
-		//System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
 		HeatShrinkEncoder encoder = new HeatShrinkEncoder(10, 5);
-		int inputOffset = 0;
-		int remainingInInput = 0;
-		Result res = res(OK);
-		long start = System.currentTimeMillis();
-		while( true ) {
-			do { // read and fill input buffer until full
-				if( remainingInInput == 0 ) {
-					// read some input bytes
-					remainingInInput = is.read(inbuffer);
-					inputOffset = 0;
-				}
-				if( remainingInInput < 0 ) {
-					res = encoder.finish();
-					break;
-				}
-				res = encoder.sink(inbuffer, inputOffset, remainingInInput);
-				if( res.isError() ) error(res);
-				remainingInInput -= res.count;
-				inputOffset += res.count;
-			} while( res.code != FULL );
-			
-			if( res.code == DONE ) break;
-			// now input buffer is full, poll for output
-			do {
-				res = encoder.poll(outbuffer);
-				if( res.isError()) error(res);
-				if( res.count > 0 ) {
-					os.write(outbuffer, 0, res.count);
-				}
-			} while( res.code == MORE );
-			//if( res.code == DONE ) break;
-		}
-		long duration = System.currentTimeMillis() - start;
-		System.out.println("duration: "+ duration / 1000.0);
+		encoder.encode(is,os);
 		os.close();
 		is.close();	
 	}
-
+	
 	public static void decode( String[] args ) throws Exception {
-		
 		InputStream is = new FileInputStream(args[0]);
 		OutputStream os = new FileOutputStream(args[1]);
-		byte[] inbuffer = new byte[1024];
-		byte[] outbuffer = new byte[4096];
-		//System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
-		HeatShrinkDecoder decoder = new HeatShrinkDecoder(10, 5, inbuffer.length);
-		int inputOffset = 0;
-		int remainingInInput = 0;
-		Result res = res(OK);
-		long start = System.currentTimeMillis();
-		while( true ) {
-			do { // read and fill input buffer until full
-				if( remainingInInput == 0 ) {
-					// read some input bytes
-					remainingInInput = is.read(inbuffer);
-					inputOffset = 0;
-				}
-				if( remainingInInput < 0 ) {
-					res = decoder.finish();
-					break;
-				}
-				res = decoder.sink(inbuffer, inputOffset, remainingInInput);
-				if( res.isError() ) error(res);
-				remainingInInput -= res.count;
-				inputOffset += res.count;
-			} while( res.code != FULL );
-			
-			if( res.code == DONE ) break;
-			// now input buffer is full, poll for output
-			do {
-				res = decoder.poll(outbuffer);
-				if( res.isError()) error(res);
-				if( res.count > 0 ) {
-					os.write(outbuffer, 0, res.count);
-				}
-			} while( res.code == MORE );
-			//if( res.code == DONE ) break;
-		}
-		long duration = System.currentTimeMillis() - start;
-		System.out.println("duration: "+ duration / 1000.0);
+		HeatShrinkDecoder decoder = new HeatShrinkDecoder(10, 5, 1024);
+		decoder.decode(is, os);
 		os.close();
 		is.close();	
 	}

@@ -4,6 +4,9 @@ import static com.rinke.solutions.io.Result.Code.*;
 import static com.rinke.solutions.io.Result.*;
 import static com.rinke.solutions.io.HeatShrinkEncoder.State.*;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
 
 import org.slf4j.Logger;
@@ -553,6 +556,43 @@ public class HeatShrinkEncoder {
 			state = HSES_FILLED;
 		}
 		return state == HSES_DONE ? res(DONE) : res(MORE);
+	}
+
+	public void encode(InputStream is, OutputStream os) throws IOException {
+		byte[] inbuffer = new byte[1024];
+		byte[] outbuffer = new byte[4096];
+		//System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
+		int inputOffset = 0;
+		int remainingInInput = 0;
+		Result res = res(OK);
+		while( true ) {
+			do { // read and fill input buffer until full
+				if( remainingInInput == 0 ) {
+					// read some input bytes
+					remainingInInput = is.read(inbuffer);
+					inputOffset = 0;
+				}
+				if( remainingInInput < 0 ) {
+					res = finish();
+					break;
+				}
+				res = sink(inbuffer, inputOffset, remainingInInput);
+				if( res.isError() ) throw new RuntimeException("error poll");
+				remainingInInput -= res.count;
+				inputOffset += res.count;
+			} while( res.code != FULL );
+			
+			if( res.code == DONE ) break;
+			// now input buffer is full, poll for output
+			do {
+				res = poll(outbuffer);
+				if( res.isError()) throw new RuntimeException("error poll");
+				if( res.count > 0 ) {
+					os.write(outbuffer, 0, res.count);
+				}
+			} while( res.code == MORE );
+			//if( res.code == DONE ) break;
+		}
 	}
 	
 }
