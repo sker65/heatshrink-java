@@ -10,7 +10,7 @@ public class Result {
 	
 	public int count;
 
-	enum Code {
+	public enum Code {
 		OK(false), /* data sunk into input buffer */
 		FULL(false), /* data sunk into input buffer */
 		EMPTY(false), /* input exhausted */
@@ -26,7 +26,7 @@ public class Result {
 		}
 	}
 
-	Result.Code code;
+	public Result.Code code;
 
 	public Result(int count, Result.Code res) {
 		super();
