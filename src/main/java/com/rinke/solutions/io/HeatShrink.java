@@ -37,7 +37,7 @@ public class HeatShrink {
 		byte[] inbuffer = new byte[1024];
 		byte[] outbuffer = new byte[4096];
 		//System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
-		HeatShrinkEncoder encoder = new HeatShrinkEncoder(10, 4);
+		HeatShrinkEncoder encoder = new HeatShrinkEncoder(10, 5);
 		int inputOffset = 0;
 		int remainingInInput = 0;
 		Result res = res(OK);
